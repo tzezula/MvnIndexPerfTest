@@ -8,11 +8,11 @@ package org.netbeans.mvn.index.perftest;
 import java.io.File;
 import java.io.IOException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.codecs.lucene46.Lucene46Codec;
+import org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat;
+import org.apache.lucene.codecs.lucene53.Lucene53Codec;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 
 /**
  *
@@ -41,11 +41,10 @@ public class Main {
     }
 
     private static IndexWriter createIndexWriter(File file) throws IOException {
-        final FSDirectory out = FSDirectory.open(file);
+        final FSDirectory out = FSDirectory.open(file.toPath());
         final IndexWriterConfig cfg = new IndexWriterConfig(
-                Version.LUCENE_CURRENT,
-                new StandardAnalyzer(Version.LUCENE_CURRENT));
-        cfg.setCodec(new NoCompressCodec(new Lucene46Codec()));
+                new StandardAnalyzer());
+        cfg.setCodec(new Lucene53Codec(Lucene50StoredFieldsFormat.Mode.BEST_SPEED));
         return new IndexWriter(out, cfg);
     }
 

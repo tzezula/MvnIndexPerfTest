@@ -8,7 +8,8 @@ package org.netbeans.mvn.index.perftest;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.codecs.FilterCodec;
 import org.apache.lucene.codecs.StoredFieldsFormat;
-import org.apache.lucene.codecs.lucene40.Lucene40StoredFieldsFormat;
+import org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat;
+import org.apache.lucene.codecs.lucene50.Lucene50StoredFieldsFormat.Mode;
 
 /**
  *
@@ -24,7 +25,7 @@ class NoCompressCodec
 
     @Override
     public StoredFieldsFormat storedFieldsFormat() {
-        return new Lucene40StoredFieldsFormat();
+        return new Lucene50StoredFieldsFormat(Mode.BEST_SPEED);
     }
 
 }
