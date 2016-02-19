@@ -31,7 +31,7 @@ public class Main {
         }
         final File index = mkdir(new File(args[1]));
 
-        final Worker w = new SequentialWorker();
+        final Worker w = new ConcurrentWorker();
         long st = System.currentTimeMillis();
         int cnt = w.index(gz, createIndexWriter(index));
         long et = System.currentTimeMillis();
