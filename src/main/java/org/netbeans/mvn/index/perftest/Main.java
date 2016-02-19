@@ -45,7 +45,7 @@ public class Main {
         final IndexWriterConfig cfg = new IndexWriterConfig(
                 Version.LUCENE_CURRENT,
                 new StandardAnalyzer(Version.LUCENE_CURRENT));
-        cfg.setCodec(new NoCompressCodec(new Lucene46Codec()));
+//        cfg.setCodec(new NoCompressCodec(new Lucene46Codec()));
         return new IndexWriter(out, cfg);
     }
 

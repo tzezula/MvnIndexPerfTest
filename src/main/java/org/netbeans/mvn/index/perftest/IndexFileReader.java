@@ -19,6 +19,8 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Index;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.FieldInfo;
 
 /**
  *
@@ -29,6 +31,74 @@ final class IndexFileReader implements Iterable<Document> {
     private static final int F_INDEXED = 1;
     private static final int F_TOKENIZED = 2;
     private static final int F_STORED = 4;
+
+    private static final FieldType INDEXED;
+    static {
+        INDEXED = new FieldType();
+        INDEXED.setIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+        INDEXED.setIndexed(true);
+        INDEXED.setOmitNorms(true);
+        INDEXED.setStoreTermVectorOffsets(false);
+        INDEXED.setStoreTermVectorPayloads(false);
+        INDEXED.setStoreTermVectorPositions(false);
+        INDEXED.setStoreTermVectors(false);
+        INDEXED.setStored(false);
+        INDEXED.setTokenized(false);
+        INDEXED.freeze();
+    }
+
+    private static final FieldType STORED;
+    static {
+        STORED = new FieldType();
+        STORED.setIndexed(false);
+        STORED.setStored(true);
+        STORED.freeze();
+    }
+
+    private static final FieldType INDEXED_AND_STORED;
+    static {
+        INDEXED_AND_STORED = new FieldType();
+        INDEXED_AND_STORED.setIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+        INDEXED_AND_STORED.setIndexed(true);
+        INDEXED_AND_STORED.setOmitNorms(true);
+        INDEXED_AND_STORED.setStoreTermVectorOffsets(false);
+        INDEXED_AND_STORED.setStoreTermVectorPayloads(false);
+        INDEXED_AND_STORED.setStoreTermVectorPositions(false);
+        INDEXED_AND_STORED.setStoreTermVectors(false);
+        INDEXED_AND_STORED.setStored(true);
+        INDEXED_AND_STORED.setTokenized(false);
+        INDEXED_AND_STORED.freeze();
+    }
+
+    private static final FieldType TOKENIZED;
+    static {
+        TOKENIZED = new FieldType();
+        TOKENIZED.setIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+        TOKENIZED.setIndexed(true);
+        TOKENIZED.setOmitNorms(true);
+        TOKENIZED.setStoreTermVectorOffsets(false);
+        TOKENIZED.setStoreTermVectorPayloads(false);
+        TOKENIZED.setStoreTermVectorPositions(false);
+        TOKENIZED.setStoreTermVectors(false);
+        TOKENIZED.setStored(false);
+        TOKENIZED.setTokenized(true);
+        TOKENIZED.freeze();
+    }
+
+    private static final FieldType TOKENIZED_AND_STORED;
+    static {
+        TOKENIZED_AND_STORED = new FieldType();
+        TOKENIZED_AND_STORED.setIndexOptions(FieldInfo.IndexOptions.DOCS_AND_FREQS);
+        TOKENIZED_AND_STORED.setIndexed(true);
+        TOKENIZED_AND_STORED.setOmitNorms(true);
+        TOKENIZED_AND_STORED.setStoreTermVectorOffsets(false);
+        TOKENIZED_AND_STORED.setStoreTermVectorPayloads(false);
+        TOKENIZED_AND_STORED.setStoreTermVectorPositions(false);
+        TOKENIZED_AND_STORED.setStoreTermVectors(false);
+        TOKENIZED_AND_STORED.setStored(true);
+        TOKENIZED_AND_STORED.setTokenized(true);
+        TOKENIZED_AND_STORED.freeze();
+    }
 
     private final File gz;
 
@@ -108,18 +178,10 @@ final class IndexFileReader implements Iterable<Document> {
 
         private static Field readField(DataInputStream in) throws IOException {
             final int flags = in.read();
-            Index index = Index.NO;
-            Store store = Store.NO;
-            if ((flags & F_INDEXED) != 0) {
-                final boolean isTokenized = (flags & F_TOKENIZED) != 0;
-                index = isTokenized ? Index.ANALYZED : Index.NOT_ANALYZED;
-            }
-            if ((flags & F_STORED) != 0) {
-                store = Store.YES;
-            }
             final String name = in.readUTF();
             final String value = readUTF(in);
-            return new Field(name, value, store, index);
+            final FieldType fldType = getFieldType(flags);
+            return new Field(name, value, fldType);
         }
 
         private static String readUTF(DataInputStream in) throws IOException {
@@ -206,6 +268,30 @@ final class IndexFileReader implements Iterable<Document> {
             }
             // The number of chars produced may be less than utflen
             return new String(chararr, 0, chararr_count);
+        }
+
+        private static FieldType getFieldType(final int flags) {
+            if ((flags & F_INDEXED) != 0) {
+                if ((flags & F_TOKENIZED) != 0) {
+                    if ((flags & F_STORED) != 0) {
+                        return TOKENIZED_AND_STORED;
+                    } else {
+                        return TOKENIZED;
+                    }
+                } else {
+                    if ((flags & F_STORED) != 0) {
+                        return INDEXED_AND_STORED;
+                    } else {
+                        return INDEXED;
+                    }
+                }
+            } else {
+                if ((flags & F_STORED) != 0) {
+                    return STORED;
+                } else {
+                    throw new IllegalArgumentException(Integer.toBinaryString(flags));
+                }
+            }
         }
     }
 }
