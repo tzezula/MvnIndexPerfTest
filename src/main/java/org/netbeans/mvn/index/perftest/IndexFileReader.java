@@ -65,6 +65,9 @@ final class IndexFileReader implements Iterable<Document> {
             if (in == null) {
                 return false;
             }
+            if (nextDoc != null) {
+                return true;
+            }
             try {
                 try {
                     final Document doc = new Document();
