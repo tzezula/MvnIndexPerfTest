@@ -8,9 +8,9 @@ package org.netbeans.mvn.index.perftest;
 import java.io.File;
 import java.io.IOException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.codecs.lucene46.Lucene46Codec;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.NoMergePolicy;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 
@@ -45,7 +45,11 @@ public class Main {
         final IndexWriterConfig cfg = new IndexWriterConfig(
                 Version.LUCENE_CURRENT,
                 new StandardAnalyzer(Version.LUCENE_CURRENT));
-        cfg.setCodec(new NoCompressCodec(new Lucene46Codec()));
+//        cfg.setCodec(new NoCompressCodec(new Lucene46Codec()));
+        cfg.setRAMBufferSizeMB(32);
+        cfg.setMergePolicy(NoMergePolicy.COMPOUND_FILES);
+        cfg.setUseCompoundFile(true);
+
         return new IndexWriter(out, cfg);
     }
 
